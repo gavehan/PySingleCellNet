@@ -1,13 +1,13 @@
 from setuptools import setup
 
-setup(name='pyMultiprocSingleCellNet',
+setup(name='pyParallelSingleCellNet',
       version='0.1',
       description='Determining cell identity from single cell RNA-Seq data',
-      url='https://github.com/gavehan/PySingleCellNet/',
+      url='https://github.com/gavehan/pyParallelSingleCellNet/',
       author='Junhan Kim',
       author_email='junkim779@yonsei.ac.kr',
       license='MIT',
-      packages=['pySingleCellNet'],
+      packages=['pyParallelSingleCellNet'],
       install_requires=[
           'pandas',
           'numpy',
