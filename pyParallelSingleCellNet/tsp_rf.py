@@ -188,6 +188,7 @@ def __ptGetTopQuickMpHelper(g, cgenes_list, expDat, myPatternG, topX):
 def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, quickPairs=True, n_procs=1):
     myPatternG = sc_sampR_to_pattern(cell_labels)
     grps = np.unique(cell_labels)
+    res = list()
     if not quickPairs:
         genes = expDat.columns.values
         pairTab = makePairTab(genes)
@@ -207,39 +208,20 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
             print(start)
             start, stp, statList = __ptGetTopHelper(start, stp, **help_params)
         with mp.Pool(processes=n_procs) as pool:
-            res = list(tqdm(
-                pool.imap_unordered(
-                    partial(
-                        __ptGetTopMpHelper,
-                        statList=statList,
-                        topX=topX
-                        ),
-                    grps
-                    ),
+            for r in tqdm(pool.imap_unordered(
+                partial(__ptGetTopMpHelper, statList=statList, topX=topX), grps),
                 total=len(grps),
                 ascii=True
-                ))
+                ):
+                res.append(r)
     else:
         with mp.Pool(processes=n_procs) as pool:
-            res = list(tqdm(
-                pool.imap_unordered(
-                    partial(
-                        __ptGetTopQuickMpHelper,
-                        cgenes_list=cgenes_list,
-                        expDat=expDat,
-                        myPatternG=myPatternG,
-                        topX=topX
-                        ),
-                    grps
-                    ),
+            for r in tqdm(pool.imap_unordered(
+                partial(__ptGetTopQuickMpHelper, cgenes_list=cgenes_list, expDat=expDat, myPatternG=myPatternG, topX=topX), grps),
                 total=len(grps),
                 ascii=True
-                ))
-            res = list(tqdm(
-                pool.imap_unordered(__ptGetTopQuickMpHelper, grps),
-                total=len(grps),
-                ascii=True
-                ))
+                ):
+                res.append(r)
     return np.unique(np.array(res).flatten())
 
 def findClassyGenes(expDat, sampTab,dLevel, topX=25, dThresh=0, alpha1=0.05,alpha2=.001, mu=2):
