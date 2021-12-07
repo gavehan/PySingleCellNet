@@ -91,12 +91,12 @@ def scn_train(
         )
     return [cgenesA, xpairs, tspRF]
 
-def scn_classify(adata, cgenes, xpairs, rf_tsp, nrand = 0 ):
-    classRes = scn_predict(cgenes, xpairs, rf_tsp, adata, nrand = nrand)
+def scn_classify(adata, cgenes, xpairs, rf_tsp, nrand=0):
+    classRes = scn_predict(cgenes, xpairs, rf_tsp, adata, nrand=nrand)
     categories = classRes.columns.values
     adNew = ad.AnnData(classRes, obs=adata.obs, var=pd.DataFrame(index=categories))
     # adNew.obs['category'] =  classRes.idxmax(axis=1)
-    adNew.obs['SCN_class'] =  classRes.idxmax(axis=1)
+    adNew.obs['SCN_class'] = classRes.idxmax(axis=1)
     return adNew
 
 def add_classRes(adata: AnnData, adClassRes, copy=False) -> AnnData:
