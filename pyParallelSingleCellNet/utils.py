@@ -26,11 +26,12 @@ def splitCommonAnnData(adata, ncells, dLevel="cell_ontology_class", cells_reserv
     val_ids = np.empty(0)
     for i, ct in enumerate(cts):
         aX = adata[adata.obs[dLevel] == ct, :]
-        ccount = aX.n_obs - cells_reserved
-        ccount = min([ccount, ncells])
+        ccount = min([aX.n_obs-cells_reserved, ncells])
         new_train_ids = np.random.choice(aX.obs.index, ccount, replace=False)
         train_ids = np.append(train_ids, new_train_ids)
-        new_val_ids = list(set(aX.obs.index)-set(new_train_ids))
+        ccount = min([aX.n_obs-ccount, ncells*2])
+        val_temp = list(set(aX.obs.index)-set(new_train_ids))
+        new_val_ids = np.random.choice(val_temp, ccount, replace=False)
         val_ids = np.append(val_ids, new_val_ids)
         print(f"{i+1}/{len(cts)} : {ct} > {aX.n_obs}")
 
