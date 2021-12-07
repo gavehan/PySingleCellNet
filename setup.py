@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='pySingleCellNet',
+setup(name='pyMultiprocSingleCellNet',
       version='0.1',
       description='Determining cell identity from single cell RNA-Seq data',
       url='https://github.com/gavehan/PySingleCellNet/',
