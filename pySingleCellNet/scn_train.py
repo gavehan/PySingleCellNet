@@ -18,21 +18,26 @@ def sc_trans_rnaseq(aDat,total = 10000 ):
     sc.pp.normalize_per_cell(aDat, counts_per_cell_after=total)
     sc.pp.log1p(aDat)
     sc.pp.scale(aDat, max_value=10)
-    #return np.log(1+expCountDnW)
+    # return np.log(1+expCountDnW)
     return aDat
 
-def sc_makeClassifier(expTrain, genes, groups, nRand=70, ntrees=2000, stratify=False):
+def sc_makeClassifier(expTrain, genes, groups, nRand=70, ntrees=2000, stratify=False, n_procs=1):
     randDat = randomize(expTrain, num=nRand)
     expT = pd.concat([expTrain, randDat])
     allgenes = expT.columns.values
-    missingGenes = np.setdiff1d(np.unique(genes), allgenes)
-    ggenes= np.intersect1d(np.unique(genes), allgenes)
+    # missingGenes = np.setdiff1d(np.unique(genes), allgenes)
+    ggenes = tuple(set(genes) & set(allgenes))
+    clf_params = dict(
+        n_estimators=ntrees,
+        n_jobs=n_procs,
+        random_state=100
+    )
     if not stratify:
-        clf = RandomForestClassifier(n_estimators=ntrees, random_state=100)
+        clf = RandomForestClassifier(**clf_params)
     else:
-        clf = RandomForestClassifier(n_estimators=ntrees,class_weight="balanced", random_state=100)
-    ggroups=np.append(np.array(groups), np.repeat("rand", nRand)).flatten()
-    clf.fit(expT.loc[:,ggenes].to_numpy(), ggroups)
+        clf = RandomForestClassifier(class_weight="balanced", **clf_params)
+    ggroups = np.append(np.array(groups), np.repeat("rand", nRand)).flatten()
+    clf.fit(expT.loc[:, ggenes].to_numpy(), ggroups)
     return clf
 
 def scn_train(
@@ -75,7 +80,15 @@ def scn_train(
     print("There are", len(xpairs), "top gene pairs\n")
     pdTrain = query_transform(expRaw.loc[:, cgenesA], xpairs)
     print("Finished pair transforming the data\n")
-    tspRF = sc_makeClassifier(pdTrain.loc[:, xpairs], genes=xpairs, groups=grps, nRand=nRand, ntrees=nTrees, stratify=stratify)
+    tspRF = sc_makeClassifier(
+        pdTrain.loc[:, xpairs],
+        genes=xpairs,
+        groups=grps,
+        nRand=nRand,
+        ntrees=nTrees,
+        stratify=stratify,
+        n_procs=n_procs
+        )
     return [cgenesA, xpairs, tspRF]
 
 def scn_classify(adata, cgenes, xpairs, rf_tsp, nrand = 0 ):
