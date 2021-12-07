@@ -69,11 +69,11 @@ def scn_train(
     expTrain = pd.DataFrame(data=aTrain.X, index=aTrain.obs.index.values, columns=aTrain.var.index.values)
     del(aTrain)
     cgenesA, grps, cgenes_list = findClassyGenes(expTrain, adata.obs[dLevel], topX=nTopGenes)
-    print("There are ", len(cgenesA), " classification genes\n")
+    print(f"There are {len(cgenesA)} classification genes\n")
 
     xpairs = ptGetTop(expTrain.loc[:, cgenesA], grps, cgenes_list, topX=nTopGenePairs, sliceSize=5000, n_procs=n_procs)
     del(expTrain)
-    print("There are", len(xpairs), "top gene pairs\n")
+    print(f"There are {len(xpairs)} top gene pairs\n")
     
     aRaw = adata[adata.obs.index.values, :].copy()
     expRaw = pd.DataFrame(data=aRaw.X, index=aRaw.obs.index.values, columns=aRaw.var.index.values)
