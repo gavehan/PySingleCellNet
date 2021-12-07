@@ -199,17 +199,17 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
             start, stp, statList = __ptGetTopHelper(start, stp)
         with mp.Pool(processes=n_procs) as pool:
             res = list(tqdm(
-                pool.imap_unordered(__ptGetTopMpHelper, grps)),
+                pool.imap_unordered(__ptGetTopMpHelper, grps),
                 total=len(grps),
                 ascii=True
-                )
+                ))
     else:
         with mp.Pool(processes=n_procs) as pool:
             res = list(tqdm(
-                pool.imap_unordered(__ptGetTopQuickMpHelper, grps)),
+                pool.imap_unordered(__ptGetTopQuickMpHelper, grps),
                 total=len(grps),
                 ascii=True
-                )
+                ))
     return np.unique(np.array(res).flatten())
 
 def findClassyGenes(expDat, sampTab,dLevel, topX=25, dThresh=0, alpha1=0.05,alpha2=.001, mu=2):
