@@ -206,7 +206,7 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
         while start < nPairs:
             print(start)
             start, stp, statList = __ptGetTopHelper(start, stp, statList=statList, **help_params)
-        with mp.get_context("spawn").mp.Pool(processes=n_procs) as pool:
+        with mp.get_context("spawn").Pool(processes=n_procs) as pool:
             res = list(tqdm(pool.imap_unordered(
                 partial(
                     __ptGetTopMpHelper, statList=statList, topX=topX), grps),
@@ -215,7 +215,7 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
                     )
                 )
     else:
-        with mp.get_context("spawn").mp.Pool(processes=n_procs) as pool:
+        with mp.get_context("spawn").Pool(processes=n_procs) as pool:
             res = list(tqdm(pool.imap_unordered(
                 partial(
                     __ptGetTopQuickMpHelper, cgenes_list=cgenes_list, expDat=expDat, myPatternG=myPatternG, topX=topX), grps),
