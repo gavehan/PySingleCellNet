@@ -41,7 +41,7 @@ def sc_makeClassifier(expTrain, genes, groups, nRand=70, ntrees=2000, stratify=F
     return clf
 
 def scn_train(
-    aTrain,
+    adata,
     dLevel,
     nTopGenes=100,
     nTopGenePairs=100,
@@ -54,31 +54,32 @@ def scn_train(
     n_procs=1
     ):
     warnings.filterwarnings('ignore')
-    stTrain = aTrain.obs
-    
-    expRaw = pd.DataFrame(data=aTrain.X.toarray(), index=aTrain.obs.index.values, columns=aTrain.var.index.values)
-    expRaw = expRaw.loc[stTrain.index.values]
+    aTrain = adata.copy()
 
-    adNorm = aTrain.copy()
-    sc.pp.normalize_per_cell(adNorm, counts_per_cell_after=counts_per_cell_after)
-    sc.pp.log1p(adNorm)
-
-    print("HVG")
-    if limitToHVG:
-        sc.pp.highly_variable_genes(adNorm, min_mean=0.0125, max_mean=4, min_disp=0.5)
-        adNorm = adNorm[:, adNorm.var.highly_variable]
-
-    sc.pp.scale(adNorm, max_value=scaleMax)
-    expTnorm = pd.DataFrame(data=adNorm.X,  index=adNorm.obs.index.values, columns=adNorm.var.index.values)
-    expTnorm = expTnorm.loc[stTrain.index.values]
-
+    sc.pp.normalize_per_cell(aTrain, counts_per_cell_after=counts_per_cell_after)
+    sc.pp.log1p(aTrain)
     print("Matrix normalized")
-    cgenesA, grps, cgenes_list = findClassyGenes(expTnorm, stTrain, dLevel=dLevel, topX=nTopGenes)
-    print("There are ", len(cgenesA), " classification genes\n")
-    xpairs = ptGetTop(expTnorm.loc[:, cgenesA], grps, cgenes_list, topX=nTopGenePairs, sliceSize=5000, n_procs=n_procs)
+    if limitToHVG:
+        sc.pp.highly_variable_genes(aTrain, min_mean=0.0125, max_mean=4, min_disp=0.5, subset=True)
+        print("Subset HVG")
+    sc.pp.scale(aTrain, max_value=scaleMax)
+    print("Matrix scaled\n")
 
+    aTrain = aTrain[adata.obs.index.values, :].copy()
+    expTrain = pd.DataFrame(data=aTrain.X, index=aTrain.obs.index.values, columns=aTrain.var.index.values)
+    del(aTrain)
+    cgenesA, grps, cgenes_list = findClassyGenes(expTrain, adata.obs[dLevel], topX=nTopGenes)
+    print("There are ", len(cgenesA), " classification genes\n")
+
+    xpairs = ptGetTop(expTrain.loc[:, cgenesA], grps, cgenes_list, topX=nTopGenePairs, sliceSize=5000, n_procs=n_procs)
+    del(expTrain)
     print("There are", len(xpairs), "top gene pairs\n")
+    
+    aRaw = adata[adata.obs.index.values, :].copy()
+    expRaw = pd.DataFrame(data=aRaw.X, index=aRaw.obs.index.values, columns=aRaw.var.index.values)
+    del(aRaw)
     pdTrain = query_transform(expRaw.loc[:, cgenesA], xpairs)
+    del(expRaw)
     print("Finished pair transforming the data\n")
     tspRF = sc_makeClassifier(
         pdTrain.loc[:, xpairs],
@@ -89,13 +90,13 @@ def scn_train(
         stratify=stratify,
         n_procs=n_procs
         )
+    print("Classifier trained")
     return [cgenesA, xpairs, tspRF]
 
 def scn_classify(adata, cgenes, xpairs, rf_tsp, nrand=0):
     classRes = scn_predict(cgenes, xpairs, rf_tsp, adata, nrand=nrand)
     categories = classRes.columns.values
     adNew = ad.AnnData(classRes, obs=adata.obs, var=pd.DataFrame(index=categories))
-    # adNew.obs['category'] =  classRes.idxmax(axis=1)
     adNew.obs['SCN_class'] = classRes.idxmax(axis=1)
     return adNew
 
@@ -109,18 +110,16 @@ def add_classRes(adata: AnnData, adClassRes, copy=False) -> AnnData:
 
 def check_adX(adata: AnnData) -> AnnData:
     from scipy import sparse
-    if( isinstance(adata.X, np.ndarray)):
+    if(isinstance(adata.X, np.ndarray)):
         adata.X = sparse.csr_matrix(adata.X)
 
-
-def scn_predict(cgenes, xpairs, rf_tsp, aDat, nrand = 2):
-    if isinstance(aDat.X,np.ndarray):
-        # in the case of aDat.X is a numpy array 
+def scn_predict(cgenes, xpairs, rf_tsp, aDat, nrand=2):
+    if isinstance(aDat.X, np.ndarray):
+        # in the case of aDat.X is a numpy array
         aDat.X = ad._core.views.ArrayView(aDat.X)
-###    expDat= pd.DataFrame(data=aDat.X, index= aDat.obs.index.values, columns= aDat.var.index.values)
-    expDat= pd.DataFrame(data=aDat.X.toarray(), index= aDat.obs.index.values, columns= aDat.var.index.values)
-    expValTrans=query_transform(expDat.reindex(labels=cgenes, axis='columns', fill_value=0), xpairs)
-    classRes_val=rf_classPredict(rf_tsp, expValTrans, numRand=nrand)
+    expDat = pd.DataFrame(data=aDat.X.toarray(), index=aDat.obs.index.values, columns=aDat.var.index.values)
+    expValTrans = query_transform(expDat.reindex(labels=cgenes, axis='columns', fill_value=0), xpairs)
+    classRes_val = rf_classPredict(rf_tsp, expValTrans, numRand=nrand)
     return classRes_val
 
 def rf_classPredict(rfObj,expQuery,numRand=50):
