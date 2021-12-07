@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from scipy import stats
 
 def sc_statTab(expDat, dThresh=0):
-    geneNames=expDat.columns.values
+    # geneNames=expDat.columns.values
     muAll=sc_compMu(expDat, threshold = dThresh);
     alphaAll=sc_compAlpha(expDat,threshold = dThresh);
     meanAll=expDat.apply(np.mean, axis = 0);
@@ -101,7 +101,6 @@ def findVarGenes(geneStats,zThresh=2,meanType="overall_mean"):
                 tmpZ=np.zeros(geneStats.loc[sg.bin==b, scaleVar[i]].index.size).T
             zscs.loc[sg.bin==b, mTypes[i]]=tmpZ
     return(zscs.loc[np.logical_and(zscs.iloc[:,0]>zThresh, np.logical_and(zscs.iloc[:,1]>zThresh,zscs.iloc[:,2]>zThresh))].index.values)
-
 
 def sc_sampR_to_pattern(sampR):
     d_ids = np.unique(sampR)
