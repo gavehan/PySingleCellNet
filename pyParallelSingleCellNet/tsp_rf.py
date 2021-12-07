@@ -206,7 +206,7 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
         start, stp, statList = __ptGetTopHelper(start, stp, **help_params)
         while start < nPairs:
             print(start)
-            start, stp, statList = __ptGetTopHelper(start, stp, **help_params)
+            start, stp, statList = __ptGetTopHelper(start, stp, statList=statList, **help_params)
         with mp.Pool(processes=n_procs) as pool:
             for r in tqdm(pool.imap_unordered(
                 partial(__ptGetTopMpHelper, statList=statList, topX=topX), grps),
