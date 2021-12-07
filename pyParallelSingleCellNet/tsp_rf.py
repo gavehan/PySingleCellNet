@@ -116,20 +116,20 @@ def findBestPairs(xdiff, n=50, maxPer=3):
 
 def query_transform(expMat, genePairs):
     npairs = len(genePairs)
-    ans = pd.DataFrame(0, index = expMat.index, columns = np.arange(npairs))
-    genes1=[]
-    genes2=[]
+    ans = pd.DataFrame(0, index=expMat.index, columns=np.arange(npairs))
+    genes1 = list()
+    genes2 = list()
     for g in genePairs:
-        sp=g.split("_")
+        sp = g.split("_")
         genes1.append(sp[0])
         genes2.append(sp[1])
-    expTemp=expMat.loc[:,np.unique(np.concatenate([genes1,genes2]))]
-    ans = pd.DataFrame(0, index = expTemp.index, columns = np.arange(npairs))
+    expTemp = expMat.loc[:, np.unique(np.concatenate([genes1, genes2]))]
+    ans = pd.DataFrame(0, index=expTemp.index, columns=np.arange(npairs))
     ans = ans.astype(pd.SparseDtype("int", 0))
-    temp1= expTemp.loc[:,genes1]
-    temp2= expTemp.loc[:,genes2]
-    temp1.columns=np.arange(npairs)
-    temp2.columns=np.arange(npairs)
+    temp1 = expTemp.loc[:, genes1]
+    temp2 = expTemp.loc[:, genes2]
+    temp1.columns = np.arange(npairs)
+    temp2.columns = np.arange(npairs)
     boolArray = temp1 > temp2
     ans = boolArray.astype(int)
     ans.columns = genePairs
