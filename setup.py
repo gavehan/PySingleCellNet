@@ -1,11 +1,11 @@
 from setuptools import setup
 
-setup(name='pyscn_gavehan',
+setup(name='pySingleCellNet',
       version='0.1',
       description='Determining cell identity from single cell RNA-Seq data',
-      url='http://github.com/pcahan1/PySingleCellNet/',
-      author='Patrick Cahan',
-      author_email='patrick.cahan@gmail.com',
+      url='https://github.com/gavehan/PySingleCellNet/',
+      author='Junhan Kim',
+      author_email='junkim779@yonsei.ac.kr',
       license='MIT',
       packages=['pySingleCellNet'],
       install_requires=[
