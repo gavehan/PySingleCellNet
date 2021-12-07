@@ -76,7 +76,7 @@ def scn_train(
     print(f"There are {len(xpairs)} top gene pairs\n")
     
     aRaw = adata[adata.obs.index.values, :].copy()
-    expRaw = pd.DataFrame(data=aRaw.X, index=aRaw.obs.index.values, columns=aRaw.var.index.values)
+    expRaw = pd.DataFrame(data=aRaw.X.toarray(), index=aRaw.obs.index.values, columns=aRaw.var.index.values)
     del(aRaw)
     pdTrain = query_transform(expRaw.loc[:, cgenesA], xpairs)
     del(expRaw)
