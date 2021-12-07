@@ -208,20 +208,22 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
             print(start)
             start, stp, statList = __ptGetTopHelper(start, stp, statList=statList, **help_params)
         with mp.Pool(processes=n_procs) as pool:
-            for r in tqdm(pool.imap_unordered(
-                partial(__ptGetTopMpHelper, statList=statList, topX=topX), grps),
-                total=len(grps),
-                ascii=True
-                ):
-                res.append(r)
+            res = list(tqdm(pool.imap_unordered(
+                partial(
+                    __ptGetTopMpHelper, statList=statList, topX=topX), grps),
+                    total=len(grps),
+                    ascii=True
+                    )
+                )
     else:
         with mp.Pool(processes=n_procs) as pool:
-            for r in tqdm(pool.imap_unordered(
-                partial(__ptGetTopQuickMpHelper, cgenes_list=cgenes_list, expDat=expDat, myPatternG=myPatternG, topX=topX), grps),
-                total=len(grps),
-                ascii=True
-                ):
-                res.append(r)
+            res = list(tqdm(pool.imap_unordered(
+                partial(
+                    __ptGetTopQuickMpHelper, cgenes_list=cgenes_list, expDat=expDat, myPatternG=myPatternG, topX=topX), grps),
+                    total=len(grps),
+                    ascii=True
+                    )
+            )
     return np.unique(np.array(res).flatten())
 
 def findClassyGenes(expDat, sampTab,dLevel, topX=25, dThresh=0, alpha1=0.05,alpha2=.001, mu=2):
