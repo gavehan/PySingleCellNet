@@ -3,6 +3,7 @@ import numpy as np
 from sklearn import linear_model
 from itertools import combinations
 from .stats import * 
+from functools import partial
 import multiprocessing as mp
 from tqdm import tqdm
 
@@ -162,7 +163,7 @@ def gnrBP(expDat,cellLabels,topX=50):
         ans[levels[i]]=tmpAns
     return ans
 
-def __ptGetTopHelper(start, stp, statList=None):
+def __ptGetTopHelper(start, stp, statList=None, **kwargs):
     stp = np.min([stp, nPairs])
     tmpTab = pairTab.iloc[start:stp, :]
     tmpPdat = ptSmall(expDat, tmpTab)
@@ -174,10 +175,10 @@ def __ptGetTopHelper(start, stp, statList=None):
         statList = tmpRes
     return (stp, stp+sliceSize, statList)
 
-def __ptGetTopMpHelper(g):
+def __ptGetTopMpHelper(g, statList, topX):
     return findBestPairs(statList[g], topX)
 
-def __ptGetTopQuickMpHelper(g):
+def __ptGetTopQuickMpHelper(g, cgenes_list, expDat, myPatternG, topX):
     cur_genes = cgenes_list[g]
     pairTab = makePairTab(cur_genes)
     tmpPdat = ptSmall(expDat, pairTab)
@@ -191,20 +192,49 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
         genes = expDat.columns.values
         pairTab = makePairTab(genes)
         nPairs = len(pairTab)
+        help_params = dict(
+            expDat = expDat,
+            sliceSize = sliceSize,
+            myPatternG = myPatternG,
+            grps = grps,
+            pairTab = pairTab,
+            nPairs = nPairs
+        )
         start = 0
         stp = sliceSize
-        start, stp, statList = __ptGetTopHelper(start, stp)
+        start, stp, statList = __ptGetTopHelper(start, stp, **help_params)
         while start < nPairs:
             print(start)
-            start, stp, statList = __ptGetTopHelper(start, stp)
+            start, stp, statList = __ptGetTopHelper(start, stp, **help_params)
         with mp.Pool(processes=n_procs) as pool:
             res = list(tqdm(
-                pool.imap_unordered(__ptGetTopMpHelper, grps),
+                pool.imap_unordered(
+                    partial(
+                        __ptGetTopMpHelper,
+                        statList=statList,
+                        topX=topX
+                        ),
+                    grps
+                    ),
                 total=len(grps),
                 ascii=True
                 ))
     else:
         with mp.Pool(processes=n_procs) as pool:
+            res = list(tqdm(
+                pool.imap_unordered(
+                    partial(
+                        __ptGetTopQuickMpHelper,
+                        cgenes_list=cgenes_list,
+                        expDat=expDat,
+                        myPatternG=myPatternG,
+                        topX=topX
+                        ),
+                    grps
+                    ),
+                total=len(grps),
+                ascii=True
+                ))
             res = list(tqdm(
                 pool.imap_unordered(__ptGetTopQuickMpHelper, grps),
                 total=len(grps),
