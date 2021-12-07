@@ -39,10 +39,10 @@ def csRenameOrth2(expQuery,expTrain,orthTable,speciesQuery='human',speciesTrain=
 
 
 def makePairTab(genes):
-    pairs = list(combinations(genes,2))
+    pairs = list(combinations(genes, 2))
     labels = ['genes1', 'genes2']
-    pTab = pd.DataFrame(data = pairs, columns = labels)
-    pTab['gene_pairs'] = pTab['genes1'] + '_' + pTab['genes2']
+    pTab = pd.DataFrame(data=pairs, columns=labels)
+    pTab['gene_pairs'] = pTab['genes1']+'_'+pTab['genes2']
     return(pTab)
 
 def gnrAll(expDat, cellLabels):
@@ -79,21 +79,21 @@ def ptSmall(expMat, pTab):
     npairs = len(pTab.index)
     genes1 = pTab['genes1'].values
     genes2 = pTab['genes2'].values
-    expTemp=expMat.loc[:,np.unique(np.concatenate([genes1,genes2]))]
-    ans = pd.DataFrame(0, index = expTemp.index, columns = np.arange(npairs))
+    expTemp = expMat.loc[:, np.unique(np.concatenate([genes1, genes2]))]
+    ans = pd.DataFrame(0, index=expTemp.index, columns=np.arange(npairs))
     ans = ans.astype(pd.SparseDtype("int", 0))
-    temp1= expTemp.loc[:,genes1]
-    temp2= expTemp.loc[:,genes2]
-    temp1.columns=np.arange(npairs)
-    temp2.columns=np.arange(npairs)
+    temp1 = expTemp.loc[:, genes1]
+    temp2 = expTemp.loc[:, genes2]
+    temp1.columns = np.arange(npairs)
+    temp2.columns = np.arange(npairs)
     boolArray = temp1 > temp2
     ans = boolArray.astype(int)
     ans.columns = list(pTab[['gene_pairs']].values.T)
     return(ans)
 
 def findBestPairs(xdiff, n=50, maxPer=3):
-    xdiff = xdiff.sort_values(by = ['cval'], ascending = False)
-    genes=[]
+    xdiff = xdiff.sort_values(by=['cval'], ascending=False)
+    genes = list()
     genesTemp = list(xdiff.index.values)
     for g in genesTemp:
         genes.append(g[0].split("_"))
@@ -103,7 +103,7 @@ def findBestPairs(xdiff, n=50, maxPer=3):
     ans = np.empty(0)
     xdiff_index = 0
     pair_names = xdiff.index.values
-    while i<n:
+    while i < n:
         tmpAns = pair_names[xdiff_index]
         tgp = tmpAns[0].split('_')
         if countList[tgp[0]] < maxPer and countList[tgp[1]] < maxPer:
