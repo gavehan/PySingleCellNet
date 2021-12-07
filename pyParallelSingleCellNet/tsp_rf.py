@@ -45,12 +45,12 @@ def makePairTab(genes):
     pTab['gene_pairs'] = pTab['genes1'] + '_' + pTab['genes2']
     return(pTab)
 
-def gnrAll(expDat,cellLabels):
-    myPatternG=sc_sampR_to_pattern(cellLabels)
-    res={}
-    groups=np.unique(cellLabels)
+def gnrAll(expDat, cellLabels):
+    myPatternG = sc_sampR_to_pattern(cellLabels)
+    res = dict()
+    groups = np.unique(cellLabels)
     for i in range(0, len(groups)):
-        res[groups[i]]=sc_testPattern(myPatternG[groups[i]], expDat)
+        res[groups[i]] = sc_testPattern(myPatternG[groups[i]], expDat)
     return res
 
 def getClassGenes(diffRes, topX=25, bottom=True):
@@ -225,19 +225,18 @@ def ptGetTop (expDat, cell_labels, cgenes_list=None, topX=50, sliceSize=5000, qu
             )
     return np.unique(np.array(res).flatten())
 
-def findClassyGenes(expDat, sampTab,dLevel, topX=25, dThresh=0, alpha1=0.05,alpha2=.001, mu=2):
-    gsTrain=sc_statTab(expDat, dThresh=dThresh)
-    ggenes=sc_filterGenes(gsTrain, alpha1=alpha1, alpha2=alpha2, mu=mu)
-    grps= sampTab[dLevel]
-    xdiff=gnrAll(expDat.loc[:,ggenes], grps)
-    groups=np.unique(grps)
-    res=[]
-    cgenes={}
+def findClassyGenes(expDat, grps, topX=25, dThresh=0, alpha1=0.05, alpha2=.001, mu=2):
+    gsTrain = sc_statTab(expDat, dThresh=dThresh)
+    ggenes = sc_filterGenes(gsTrain, alpha1=alpha1, alpha2=alpha2, mu=mu)
+    xdiff = gnrAll(expDat.loc[:, ggenes], grps)
+    groups = np.unique(grps)
+    res = list()
+    cgenes = dict()
     for g in groups:
-        temp=getClassGenes(xdiff[g], topX)
-        cgenes[g]=temp
+        temp = getClassGenes(xdiff[g], topX)
+        cgenes[g] = temp
         res.append(temp)
-    cgenes2=np.unique(np.array(res).flatten())
-    return [cgenes2, grps, cgenes]
+    cgenes2 = np.unique(np.array(res).flatten())
+    return (cgenes2, grps, cgenes)
 
     
